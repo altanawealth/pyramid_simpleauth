@@ -303,6 +303,18 @@ class ChangePassword(FlexibleSchema):
         )
     ]
 
+class ResetPassword(FlexibleSchema):
+    """Form fields to render and validate for password change."""
+
+    new_password = Password(not_empty=True)
+    new_confirm = Password(not_empty=True)
+    chained_validators = [
+        validators.FieldsMatch(
+            'new_password',
+            'new_confirm'
+        )
+    ]
+
 
 class ChangeUsername(FlexibleSchema):
     """Form field to render and validate for username change."""

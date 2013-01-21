@@ -5,6 +5,11 @@
 from base64 import urlsafe_b64decode
 import inspect
 
+import logging
+logger = logging.getLogger(__name__)
+
+import hashlib
+
 from formencode import Invalid
 from zope.interface.registry import ComponentLookupError
 
@@ -18,6 +23,9 @@ from pyramid_simpleform import Form
 from pyramid_simpleform.renderers import FormRenderer
 
 from pyramid_simpleauth import events, model, schema, tree
+
+
+
 
 
 def validate_next_param(request):
@@ -230,7 +238,6 @@ def signup_view(request):
             return HTTPFound(location=location)
         form.data['failed'] = True
     return {'renderer': FormRenderer(form)}
-
 
 @view_config(context=tree.AuthRoot, name='authenticate', permission=PUBLIC,
         renderer='json', request_method='POST', xhr=True)
@@ -518,6 +525,88 @@ def change_password(request):
     form.data['next'] = location
     return {'renderer': FormRenderer(form), 'user': request.user}
 
+
+@view_config(context=tree.AuthRoot, name='reset_password',
+             permission='reset_password',
+             renderer='pyramid_simpleauth:templates/reset_password.mako')
+def reset_password(request):
+    """Reset user password."""
+    form = Form(request, schema=schema.ResetPassword,
+                defaults={'failed': False})
+    
+    msg= ''
+
+    #Get URL params
+    username = request.params.get('username', request.POST.get('username'))
+    token = request.params.get('token', request.POST.get('token'))
+
+    user = model.get_existing_user(username=username) 
+    
+    
+    #Check that user is an existing user
+    if not user:
+        msg = 'User does not exists'
+        form.data['failed'] = True
+    else:
+        #Calculate user token in order to compare it to the one in the url
+        user_token = hashlib.sha1()
+        user_token.update(user.canonical_id)
+        
+        if token != user_token.hexdigest():
+            msg = 'Link has expired'
+            form.data['failed'] = True
+        else:
+            if request.method == 'POST':
+                if form.validate():
+                    d = form.data
+                    # Save new password to the db
+                    user.password = model.encrypt(d['new_password'])
+                    model.save(user)
+                    request.registry.notify(events.UserChangedPassword(request, user))
+                    location = get_redirect_location(request, user)
+                    headers = remember(request, user.canonical_id)
+                    return HTTPFound(location=location, headers=headers)
+            
+            else:
+                form.data['username'] = username
+                form.data['token'] = token
+
+    return {
+        'form' : form, 
+        'renderer': FormRenderer(form), 
+        'user': user, 
+        'msg': msg,
+        'request': request
+    }
+            
+
+@view_config(context=tree.AuthRoot, name='forgot_password', permission=PUBLIC,
+        renderer='pyramid_simpleauth:templates/forgot_password.mako', xhr=False)
+def forgot_password(request):
+    
+
+    next_ = validate_next_param(request)
+    # Validate the rest of the user input.
+    form = Form(request, schema=schema.Login, defaults={'failed': False})
+    if request.method == 'POST':
+        if form.validate():
+            d = form.data
+            user = model.authenticate(d['username'], d['password'])
+            if user:
+                # Remember the logged in user.
+                headers = remember(request, user.canonical_id)
+                # Work out where to redirect to next.
+                location = get_redirect_location(request, user,
+                        route_name='index', view_name=None)
+                # Fire a ``UserLoggedIn`` event.
+                request.registry.notify(events.UserLoggedIn(request, user))
+                # Redirect.
+                return HTTPFound(location=location, headers=headers)
+        form.data['failed'] = True
+    # Set ``next`` no matter what.
+    if next_:
+        form.data['next'] = next_
+    return {'renderer': FormRenderer(form)}
 
 @view_config(context=tree.AuthRoot, name="confirm", permission=PUBLIC,
         renderer='pyramid_simpleauth:templates/confirm_email_address.mako')

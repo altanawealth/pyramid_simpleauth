@@ -1,3 +1,6 @@
+# 0.5
+
+Add Forgot Password functionnality
 
 # 0.4
 
