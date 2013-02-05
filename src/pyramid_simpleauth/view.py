@@ -551,6 +551,8 @@ def reset_password(request):
         #Calculate user token in order to compare it to the one in the url
         user_token = hashlib.sha1()
         user_token.update(user.canonical_id)
+        user_token.update(str(user.created))
+        user_token.update(str(user.modified))
         
         if token != user_token.hexdigest():
             msg = 'Link has expired'
