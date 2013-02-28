@@ -32,12 +32,6 @@ class IUserChangedPassword(Interface):
     request = Attribute('The request object')
     user = Attribute('The user who changes its password.')
 
-class IUserResetedPassword(Interface):
-    """An event type that is emitted after a user reset its password."""
-
-    request = Attribute('The request object')
-    user = Attribute('The user who reset its password.')
-
 
 class IUserChangedUsername(Interface):
     """An event type that is emitted after a user changes its username."""
@@ -102,19 +96,6 @@ class UserChangedPassword(object):
         self.request = request
         self.user = user
         self.data = data
-
-
-@implementer(IUserResetedPassword)
-class UserResetedPassword(object):
-    """An instance of this class is emitted whenever a user resets its
-       password.
-    """
-
-    def __init__(self, request, user, data=None):
-        self.request = request
-        self.user = user
-        self.data = data
-
 
 @implementer(IUserChangedUsername)
 class UserChangedUsername(object):
