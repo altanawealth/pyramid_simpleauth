@@ -191,24 +191,25 @@ password encryption library) under Python 3.
 
 You'll need `nose`, `coverage`, `mock` and `WebTest`.  Then, e.g.:
 
-    $ nosetests --cover-package=pyramid_simpleauth --cover-tests --with-doctest --with-coverage
     Name                            Stmts   Miss  Cover   Missing
     -------------------------------------------------------------
-    pyramid_simpleauth                 26      0   100%   
+    pyramid_simpleauth                 26      0   100%
     pyramid_simpleauth.acl             17      2    88%   49, 66
-    pyramid_simpleauth.events          74      3    96%   114-116
-    pyramid_simpleauth.hooks           32      0   100%   
-    pyramid_simpleauth.interfaces       8      0   100%   
+    pyramid_simpleauth.events          65      0   100% 
+    pyramid_simpleauth.hooks           32      0   100%
+    pyramid_simpleauth.interfaces       8      0   100%
     pyramid_simpleauth.model           95      5    95%   189-193, 199
-    pyramid_simpleauth.schema          95      0   100%   
-    pyramid_simpleauth.tests          382      0   100%   
-    pyramid_simpleauth.tree            31      0   100%   
-    pyramid_simpleauth.view           217     42    81%   532-574, 588-609
+    pyramid_simpleauth.schema          91      0   100%
+    pyramid_simpleauth.tests          382      0   100%
+    pyramid_simpleauth.tree            31      0   100%
+    pyramid_simpleauth.view           173      0   100%
     -------------------------------------------------------------
-    TOTAL                             977     52    95%   
+    TOTAL                             920      7    99%   
     ----------------------------------------------------------------------
-    Ran 63 tests in 3.459s
+    Ran 63 tests in 3.714s
+    
     OK
+
 
 [apex]: https://github.com/cd34/apex
 [pyramid]: http://pyramid.readthedocs.org
