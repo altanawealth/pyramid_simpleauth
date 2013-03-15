@@ -89,12 +89,12 @@ class Email(validators.Email):
           Invalid: The domain portion of the email address is invalid (the portion after the @: baz)
 
       Note that when used with ``resolve_domain=True`` it must be a real
-      domain::
+      domain, unless your DNS is a fail, so to illustrate, we use AW email::
 
-          >>> Email(resolve_domain=True).to_python('a@b.com')
+          >>> Email(resolve_domain=True).to_python('a@altanawealth.com')
           Traceback (most recent call last):
           ...
-          Invalid: The domain of the email address does not exist (the portion after the @: b.com)
+          Invalid: The domain of the email address does not exist (the portion after the @: altanawealth.com)
 
       Otherwise strips and returns as unicode::
 
@@ -265,7 +265,7 @@ class Signup(FlexibleSchema):
     """Form fields to render and validate for signup."""
 
     username = UniqueUsername(not_empty=True)
-    email = UniqueEmail(resolve_domain=True, not_empty=True)
+    email = UniqueEmail(resolve_domain=False, not_empty=True)
     password = Password(not_empty=True)
     confirm = Password(not_empty=True)
     chained_validators = [
