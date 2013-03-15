@@ -131,15 +131,3 @@ class EmailPreferred(object):
         self.request = request
         self.user = user
         self.data = data
-
-
-@implementer(IUserDeleted)
-class UserDeleted(object):
-    """An instance of this class is emitted whenever a user prefers an email
-       address, typically by clicking on a button in an account management
-       page.
-    """
-
-    def __init__(self, request, username, data=None):
-        self.request = request
-        self.username = username

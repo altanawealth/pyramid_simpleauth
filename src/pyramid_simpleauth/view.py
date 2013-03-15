@@ -22,10 +22,8 @@ from pyramid.view import view_config
 from pyramid_simpleform import Form
 from pyramid_simpleform.renderers import FormRenderer
 
-from pyramid_simpleauth import events, model, schema, tree
-
-
-
+# pyramid_simpleauth
+from . import events, model, schema, tree
 
 
 def validate_next_param(request):
@@ -569,34 +567,3 @@ def prefer_email(request):
         pass
     location = get_redirect_location(request)
     return HTTPFound(location=location)
-
-
-@view_config(context=model.User, name="delete_user",
-             permission="delete_user",
-             renderer='pyramid_simpleauth:templates/delete_user.mako')
-def delete_user(request):
-    """Delete user."""
-    user = request.context
-    if request.method == 'POST':
-        # Redirect.
-        location = get_redirect_location(request)
-        if user is request.user:
-            # User deleted itself, must logout
-            headers = forget(request)
-            request.registry.notify(
-                    events.UserLoggedOut(request, request.user))
-            resp = HTTPFound(location=location, headers=headers)
-        else:
-            resp = HTTPFound(location=location)
-        # Delete user
-        username = user.username
-        model.Session.delete(user)
-        # Fire a ``UserDeleted`` event.
-        request.registry.notify(events.UserDeleted(request, username))
-        return resp
-    else:
-        form = Form(request, schema=schema.FlexibleSchema)
-        return {
-            'user': user,
-            'renderer': FormRenderer(form),
-        }

@@ -63,9 +63,8 @@ class BaseTestCase(unittest.TestCase):
 
     def makeUser(self, username, password):
         """Create and save a user with the credentials provided."""
-
         user = model.User()
-        user.username = username
+        user.username = unicode(username)
         user.password = model.encrypt(password)
         model.save(user)
         transaction.commit()
@@ -752,7 +751,7 @@ class TestDeleteUser(BaseTestCase):
         self.app = TestApp(self.config.make_wsgi_app())
 
     def test_success(self):
-        "User can delete itself"
+        """User can NOT delete itself. We have rules for what delete means."""
         self.add_user_root()
 
         user = self.makeUser('thruflo', 'Password')
@@ -761,22 +760,10 @@ class TestDeleteUser(BaseTestCase):
         self.authenticate()
 
         # Attempt to delete user
-        res = self.app.get('/users/thruflo/delete_user')
+        res = self.app.post('/users/thruflo/delete_user', status=404)
 
-        # Verify confirmation message
-        self.assertTrue('Are you really sure' in res.body)
-
-        # Verify that the user has not yet been deleted
+        # Verify that the user was not deleted.
         self.assertIsNotNone(get_existing_user(username='thruflo'))
-
-        # Delete the user
-        res = self.app.post('/users/thruflo/delete_user')
-
-        # Verify that the user has now been deleted
-        self.assertIsNone(get_existing_user(username='thruflo'))
-
-        # User should be logged out
-        self.assertTrue(len(res.headers['Set-Cookie']) < 200)
 
     def test_other_user(self):
         "Non-admin user cannot delete other user"
@@ -791,32 +778,10 @@ class TestDeleteUser(BaseTestCase):
         transaction.commit()
         self.authenticate(username='bob', password='Password')
 
-        # Try to delete user
-        res = self.app.post('/users/alice/delete_user', status=403)
+        # Try to delete user - JC turning this function off now...
+        res = self.app.post('/users/alice/delete_user', status=404)
 
         # Verify that the user has not been deleted
         self.assertIsNotNone(get_existing_user(username='alice'))
         # User should still be logged in
-        self.assertGreater(len(res.headers['Set-Cookie']), 250)
-
-    def test_admin(self):
-        "Admin should be allowed to delete any user"
-        self.add_user_root()
-
-        # User to delete
-        self.makeUser('alice', 'Password')
-
-        # Login as admin
-        admin = self.makeUser('admin', 'Password')
-        admin.roles.append(model.Role(name='admin'))
-        model.save(admin)
-        transaction.commit()
-        self.authenticate(username='admin', password='Password')
-
-        # Delete user
-        res = self.app.post('/users/alice/delete_user')
-
-        # Verify that user has been successfully deleted
-        self.assertIsNone(get_existing_user(username='alice'))
-        # Admin should still be logged in
         self.assertGreater(len(res.headers['Set-Cookie']), 250)
